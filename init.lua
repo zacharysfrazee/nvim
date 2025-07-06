@@ -9,9 +9,14 @@ require("config.lazy")
 -- Plugins
 require("lazy").setup({
     spec = {
+        -- Theme and highlighting
         { "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...},
-        { 'nvim-telescope/telescope.nvim', tag = '0.1.8', dependencies = { 'nvim-lua/plenary.nvim' }},
         { "nvim-treesitter/nvim-treesitter", branch = 'master', lazy = false, build = ":TSUpdate"},
+
+        -- File search
+        { 'nvim-telescope/telescope.nvim', tag = '0.1.8', dependencies = { 'nvim-lua/plenary.nvim' }},
+
+        -- Buffers, Explorer, and tabs
         { "nvim-tree/nvim-tree.lua", version = "*", lazy = false,
             dependencies = {
                 "nvim-tree/nvim-web-devicons",
@@ -20,10 +25,24 @@ require("lazy").setup({
                 require("nvim-tree").setup {}
             end,
         },
-        { "tiagovla/scope.nvim", config = true },
-        { 'akinsho/bufferline.nvim',  version = "*", dependencies = 'nvim-tree/nvim-web-devicons'},
-        { 'lewis6991/gitsigns.nvim',  version = "*", },
-        { 'neovim/nvim-lspconfig',    version = "*", },
+        { "tiagovla/scope.nvim",                   config = true },
+        { 'akinsho/bufferline.nvim',               version = "*", dependencies = 'nvim-tree/nvim-web-devicons'},
+
+        -- Git lines changed
+        { 'lewis6991/gitsigns.nvim',               version = "*", },
+
+        -- LSP and Completion
+        { 'neovim/nvim-lspconfig',                 version = "*", },
+        { 'hrsh7th/cmp-nvim-lsp',                  version = "*", },
+        { 'hrsh7th/cmp-buffer',                    version = "*", },
+        { 'hrsh7th/cmp-path',                      version = "*", },
+        { 'hrsh7th/cmp-cmdline',                   version = "*", },
+        { 'hrsh7th/nvim-cmp',                      version = "*", },
+        { 'hrsh7th/cmp-nvim-lsp-signature-help',  version = "*", },
+
+        -- Snippets engine
+        { 'hrsh7th/cmp-vsnip',                     version = "*", },
+        { 'hrsh7th/vim-vsnip',                     version = "*", },
     },
 
     checker = { enabled = true },
@@ -43,11 +62,6 @@ vim.opt.wrap           = false
 
 -- Backspace behavior
 vim.opt.backspace = 'indent,eol,start'
-
--- Keybindings
-vim.api.nvim_set_keymap('t', '<ESC>',   '<C-\\><C-n>', {noremap = true}) -- Term exit on Esc
-vim.api.nvim_set_keymap('i', '<C-H>',   '<C-W>',       {noremap = true}) -- Ctrl + Backspace
-vim.api.nvim_set_keymap('i', '<C-DEL>', '<C-o>dw',     {noremap = true}) -- Ctrl + Delete
 
 -- Trailing whitespace begone!
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
@@ -111,7 +125,7 @@ require('gitsigns').setup {
     },
     auto_attach = true,
     attach_to_untracked = false,
-    current_linaae_blame = false, -- Toggle with `:Gitsigns toggle_current_line_blame`
+    current_line_blame  = false, -- Toggle with `:Gitsigns toggle_current_line_blame`
     current_line_blame_opts = {
         virt_text = true,
         virt_text_pos = 'eol', -- 'eol' | 'overlay' | 'right_align'
@@ -134,6 +148,69 @@ require('gitsigns').setup {
     },
 }
 
--- LSP
-require'lspconfig'.pyright.setup{}
+
+-- LSP SETUP
+-- -------------------------
+local cmp = require'cmp'
+
+cmp.setup({
+  snippet = {
+      -- REQUIRED - you must specify a snippet engine
+      expand = function(args)
+          vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
+      end,
+  },
+  window = {
+      completion    = cmp.config.window.bordered(),
+      documentation = cmp.config.window.bordered(),
+  },
+  mapping = cmp.mapping.preset.insert({
+      ['<C-b>']     = cmp.mapping.scroll_docs(-4),
+      ['<C-f>']     = cmp.mapping.scroll_docs(4),
+      ['<C-Space>'] = cmp.mapping.complete(),
+      ['<C-e>']     = cmp.mapping.abort(),
+      ['<tab>']     = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+  }),
+  sources = cmp.config.sources({
+      { name = 'nvim_lsp' },
+      { name = 'vsnip' }, -- For vsnip users.
+      { name = 'nvim_lsp_signature_help' }
+  }, {
+      { name = 'buffer' },
+  })
+})
+
+-- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
+cmp.setup.cmdline({ '/', '?' }, {
+  mapping = cmp.mapping.preset.cmdline(),
+  sources = {
+    { name = 'buffer' }
+  }
+})
+
+-- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
+cmp.setup.cmdline(':', {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = cmp.config.sources({
+        { name = 'path' }
+    }, {
+        { name = 'cmdline' }
+    }),
+    matching = { disallow_symbol_nonprefix_matching = false }
+})
+
+-- Set up lspconfig.
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+-- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
+require('lspconfig')['pyright'].setup {
+    capabilities = capabilities
+}
+
+-- Keybindings
+vim.api.nvim_set_keymap('t', '<ESC>',   '<C-\\><C-n>',  { noremap = true })                -- Term exit on Esc
+vim.api.nvim_set_keymap('i', '<C-H>',   '<C-W>',        { noremap = true })                -- Ctrl + Backspace
+vim.api.nvim_set_keymap('i', '<C-DEL>', '<C-o>dw',      { noremap = true })                -- Ctrl + Delete
+vim.api.nvim_set_keymap('n', '<C-s>',   ':w<CR>',       { noremap = true, silent = true }) -- Noob Save Normal
+vim.api.nvim_set_keymap('i', '<C-s>',   '<Esc>:w<CR>a', { noremap = true, silent = true }) -- Noob Save Insert
 
