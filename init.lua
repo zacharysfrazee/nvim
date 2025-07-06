@@ -75,7 +75,7 @@ vim.cmd([[colorscheme gruvbox]])
 
 -- Telescope
 local builtin = require('telescope.builtin')
-vim.keymap.set('n', '<c-p>', builtin.git_files, { desc = 'Telescope find files' })
+vim.keymap.set('n', '<c-p>', builtin.find_files, { desc = 'Telescope find files' })
 
 -- Treesitter
 require'nvim-treesitter.configs'.setup {
@@ -206,6 +206,17 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 require('lspconfig')['pyright'].setup {
     capabilities = capabilities
 }
+
+
+require('lspconfig')['clangd'].setup {
+    capabilities = capabilities
+}
+
+-- Annoying error text
+vim.diagnostic.config({
+    virtual_text  = false,
+    virtual_lines = false,
+})
 
 -- Keybindings
 vim.api.nvim_set_keymap('t', '<ESC>',   '<C-\\><C-n>',  { noremap = true })                -- Term exit on Esc
