@@ -11,7 +11,11 @@ require("lazy").setup({
     spec = {
         -- Theme and highlighting
         { "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...},
+        { "navarasu/onedark.nvim",    version = "*" },
         { "nvim-treesitter/nvim-treesitter", branch = 'master', lazy = false, build = ":TSUpdate"},
+
+        -- Autoclose brackets
+        { "m4xshen/autoclose.nvim",   version = "*" },
 
         -- File search
         { 'nvim-telescope/telescope.nvim', tag = '0.1.8', dependencies = { 'nvim-lua/plenary.nvim' }},
@@ -38,7 +42,7 @@ require("lazy").setup({
         { 'hrsh7th/cmp-path',                      version = "*", },
         { 'hrsh7th/cmp-cmdline',                   version = "*", },
         { 'hrsh7th/nvim-cmp',                      version = "*", },
-        { 'hrsh7th/cmp-nvim-lsp-signature-help',  version = "*", },
+        { 'hrsh7th/cmp-nvim-lsp-signature-help',   version = "*", },
 
         -- Snippets engine
         { 'hrsh7th/cmp-vsnip',                     version = "*", },
@@ -63,15 +67,28 @@ vim.opt.wrap           = false
 -- Backspace behavior
 vim.opt.backspace = 'indent,eol,start'
 
+-- I suck at spelling things
+vim.opt.spell     = true
+vim.opt.spelllang = "en_us"
+
 -- Trailing whitespace begone!
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     pattern = { "*" },
     command = [[%s/\s\+$//e]],
 })
 
--- Gruvbox
+-- Theme
 vim.opt.background = "dark"
-vim.cmd([[colorscheme gruvbox]])
+require('onedark').setup {
+    style = 'darker'
+}
+require('onedark').load()
+
+vim.cmd('hi SpellBad ctermbg=cyan guisp=cyan')
+
+
+-- Autoclose brackets
+require("autoclose").setup()
 
 -- Telescope
 local builtin = require('telescope.builtin')
