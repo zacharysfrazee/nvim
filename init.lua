@@ -48,8 +48,6 @@ require("lazy").setup({
         { 'hrsh7th/cmp-vsnip',                     version = "*", },
         { 'hrsh7th/vim-vsnip',                     version = "*", },
     },
-
-    checker = { enabled = true },
 })
 
 -- Tabs are 4 spaces
@@ -86,13 +84,30 @@ require('onedark').load()
 
 vim.cmd('hi SpellBad ctermbg=cyan guisp=cyan')
 
-
 -- Autoclose brackets
 require("autoclose").setup()
 
 -- Telescope
+local actions = require("telescope.actions")
+
+local open_after_tree = function(prompt_bufnr)
+    vim.defer_fn(function()
+        actions.select_default(prompt_bufnr)
+    end, 100)
+end
+
+require("telescope").setup({
+    defaults = {
+        mappings = {
+            i = { ["<CR>"] = open_after_tree },
+            n = { ["<CR>"] = open_after_tree },
+        },
+    },
+})
+
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<c-p>', builtin.find_files, { desc = 'Telescope find files' })
+vim.keymap.set('n', '<c-f>', builtin.live_grep,  { desc = 'Telescope live grep'  })
 
 -- Treesitter
 require'nvim-treesitter.configs'.setup {
@@ -240,5 +255,7 @@ vim.api.nvim_set_keymap('t', '<ESC>',   '<C-\\><C-n>',  { noremap = true })     
 vim.api.nvim_set_keymap('i', '<C-H>',   '<C-W>',        { noremap = true })                -- Ctrl + Backspace
 vim.api.nvim_set_keymap('i', '<C-DEL>', '<C-o>dw',      { noremap = true })                -- Ctrl + Delete
 vim.api.nvim_set_keymap('n', '<C-s>',   ':w<CR>',       { noremap = true, silent = true }) -- Noob Save Normal
-vim.api.nvim_set_keymap('i', '<C-s>',   '<Esc>:w<CR>a', { noremap = true, silent = true }) -- Noob Save Insert
+vim.api.nvim_set_keymap('i', '<C-s>',   '<Esc>:w<CR>',  { noremap = true, silent = true }) -- Noob Save Insert
 
+vim.api.nvim_set_keymap('n', 'gn', ':bnext<cr>',        { noremap = true })                -- Buffer next
+vim.api.nvim_set_keymap('n', 'gp', ':bprevious<cr>',    { noremap = true })                -- Buffer previous
